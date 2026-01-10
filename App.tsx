@@ -126,7 +126,7 @@ const App: React.FC = () => {
           text: 'text-slate-900',
           accent: 'text-emerald-700',
           header: 'text-green-900',
-          icon: <Flower2 className="text-yellow-200 drop-shadow-sm" size={20} />
+          icon: <Flower2 className="text-rose-200 drop-shadow-sm" size={20} />
         };
       case 'evening':
         return {
