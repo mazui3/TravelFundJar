@@ -11,7 +11,7 @@ const M3_TASKS = [
 
 const SEALPHIE_TASKS = [
   { id: 's1', text: 'Sleeping 8 hours', freq: 'Daily' },
-  { id: 's2', text: 'Ggym/Yoga/Rock Climbing', freq: 'Daily' },
+  { id: 's2', text: 'Gym/Yoga/Rock Climbing', freq: 'Daily' },
   { id: 's3', text: 'Writing diaries', freq: 'Weekly' },
 ];
 
@@ -26,6 +26,24 @@ const App: React.FC = () => {
   const [activeCoins, setActiveCoins] = useState<number[]>([]);
   const [streamers, setStreamers] = useState<{ id: number; left: string; color: string; delay: string; duration: string; startRot: string; endRot: string; width: string; height: string }[]>([]);
   const [currentTheme, setCurrentTheme] = useState<TimeTheme>('morning');
+
+  // Pre-calculate random decoration data so it doesn't change on re-render
+  const afternoonFlowers = useMemo(() => Array.from({ length: 30 }).map((_, i) => ({
+    id: i,
+    top: Math.random() * 100,
+    left: Math.random() * 100,
+    size: 20 + Math.random() * 45,
+    delay: Math.random() * 10,
+    duration: 15 + Math.random() * 15
+  })), []);
+
+  const nightStars = useMemo(() => Array.from({ length: 30 }).map((_, i) => ({
+    id: i,
+    top: Math.random() * 70,
+    left: Math.random() * 100,
+    size: Math.random() * 3,
+    delay: Math.random() * 10
+  })), []);
 
   useEffect(() => {
     const updateTheme = () => {
@@ -103,12 +121,12 @@ const App: React.FC = () => {
         };
       case 'afternoon':
         return {
-          bg: 'bg-gradient-to-br from-emerald-100 via-green-200 to-green-500',
+          bg: 'bg-gradient-to-br from-yellow-100 via-green-200 to-emerald-400',
           card: 'bg-white/50',
           text: 'text-slate-900',
           accent: 'text-emerald-700',
           header: 'text-green-900',
-          icon: <Flower2 className="text-rose-400" size={20} />
+          icon: <Flower2 className="text-yellow-200 drop-shadow-sm" size={20} />
         };
       case 'evening':
         return {
@@ -116,7 +134,7 @@ const App: React.FC = () => {
           card: 'bg-white/30',
           text: 'text-slate-900',
           accent: 'text-orange-800',
-          header: 'text-white md:text-indigo-900',
+          header: 'text-white lg:text-indigo-900',
           icon: <Wind className="text-orange-400" size={20} />
         };
       case 'night':
@@ -151,15 +169,16 @@ const App: React.FC = () => {
       </div>
     );
     if (currentTheme === 'afternoon') return (
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {Array.from({ length: 15 }).map((_, i) => (
-          <div key={i} className="absolute text-white/30 animate-twinkle"
+      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-70">
+        {afternoonFlowers.map((flower) => (
+          <div key={flower.id} className="absolute animate-float-flower"
                style={{
-                 top: `${Math.random() * 100}%`,
-                 left: `${Math.random() * 100}%`,
-                 animationDelay: `${Math.random() * 5}s`
+                 top: `${flower.top}%`,
+                 left: `${flower.left}%`,
+                 animationDelay: `${flower.delay}s`,
+                 animationDuration: `${flower.duration}s`
                }}>
-            <div className="w-1 h-1 bg-white rounded-full"></div>
+            <Flower2 className="text-white opacity-40 hover:opacity-100 transition-opacity" size={flower.size} />
           </div>
         ))}
       </div>
@@ -169,14 +188,14 @@ const App: React.FC = () => {
     );
     if (currentTheme === 'night') return (
       <div className="fixed inset-0 pointer-events-none">
-        {Array.from({ length: 30 }).map((_, i) => (
-          <div key={i} className="absolute bg-white/40 rounded-full animate-twinkle"
+        {nightStars.map((star) => (
+          <div key={star.id} className="absolute bg-white/40 rounded-full animate-twinkle"
                style={{
-                 width: Math.random() * 3 + 'px',
-                 height: Math.random() * 3 + 'px',
-                 top: Math.random() * 70 + '%',
-                 left: Math.random() * 100 + '%',
-                 animationDelay: Math.random() * 10 + 's'
+                 width: star.size + 'px',
+                 height: star.size + 'px',
+                 top: star.top + '%',
+                 left: star.left + '%',
+                 animationDelay: star.delay + 's'
                }} />
         ))}
         <div className="absolute bottom-0 w-full h-24 bg-gradient-to-t from-black/40 to-transparent flex items-end justify-center pb-4 opacity-20">
@@ -195,20 +214,20 @@ const App: React.FC = () => {
     const hasHanamaru = logs.some(log => log.amount === 0 && tasks.some(t => t.text === log.taskName && t.freq === 'Weekly'));
 
     return (
-      <div className={`flex flex-col h-full w-full p-4 md:p-6 ${theme.card} backdrop-blur-xl rounded-[2.5rem] border border-white/20 shadow-xl transition-all hover:bg-white/20 relative theme-transition`}>
+      <div className={`flex flex-col h-full w-full p-4 lg:p-6 ${theme.card} backdrop-blur-xl rounded-[2.5rem] border border-white/20 shadow-xl transition-all hover:bg-white/20 relative theme-transition mb-4 lg:mb-0`}>
         <div className="relative flex items-center gap-4 mb-6">
-          <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 rounded-full border-2 border-slate-900/10 flex items-center justify-center bg-white/80 shadow-inner">
-             <User size={24} className="md:size-7 text-slate-700" />
+          <div className="w-12 h-12 lg:w-16 lg:h-16 shrink-0 rounded-full border-2 border-slate-900/10 flex items-center justify-center bg-white/80 shadow-inner">
+             <User size={24} className="lg:size-7 text-slate-700" />
           </div>
-          <h2 className={`text-xl md:text-3xl font-bold ${theme.text} tracking-tight`}>{name}</h2>
+          <h2 className={`text-xl lg:text-3xl font-bold ${theme.text} tracking-tight`}>{name}</h2>
 
           {hasHanamaru && (
-            <div className="absolute -top-8 -right-6 md:-right-12 w-20 h-20 md:w-28 md:h-28 z-[150] cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
+            <div className="absolute -top-8 -right-6 lg:-right-12 w-20 h-20 lg:w-28 lg:h-28 z-[150] cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
                  onClick={triggerCelebration}>
               <img
                 src="https://raw.githubusercontent.com/mazui3/Travel-Fund-Jar/refs/heads/main/Hanamaru.png"
                 alt="Hanamaru Badge"
-                className="w-full h-full object-contain drop-shadow-2xl rounded-full border-4 border-white bg-white"
+                className="w-full h-full object-contain drop-shadow-2xl"
               />
             </div>
           )}
@@ -222,7 +241,7 @@ const App: React.FC = () => {
                 <span className={`text-[8px] bg-slate-900/10 px-2 py-0.5 rounded-full ${theme.text} font-black uppercase whitespace-nowrap shrink-0`}>
                   {task.freq}
                 </span>
-                <div className={`text-sm md:text-base font-medium ${theme.text} truncate`}>
+                <div className={`text-sm lg:text-base font-medium ${theme.text} truncate`}>
                   {task.text}
                 </div>
               </li>
@@ -232,7 +251,7 @@ const App: React.FC = () => {
 
         <div className="flex-1 flex flex-col min-h-0">
           <h3 className={`text-[9px] font-black uppercase tracking-widest ${theme.text} mb-3 opacity-50`}>Savings History</h3>
-          <div className="flex-1 overflow-y-auto pr-1 space-y-1.5 scrollbar-hide">
+          <div className="flex-1 overflow-y-auto max-h-[400px] lg:max-h-none pr-1 space-y-1.5 scrollbar-hide">
             {sortedLogs.map(log => (
               <div key={log.id} className={`p-3 bg-white/10 rounded-xl text-[13px] border border-white/5 flex justify-between items-center animate-in fade-in slide-in-from-top-1 duration-300`}>
                 <div className="min-w-0 flex items-baseline gap-2">
@@ -251,7 +270,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className={`h-screen w-full flex flex-col ${theme.bg} theme-transition overflow-hidden relative`}>
+    <div className={`min-h-screen lg:h-screen w-full flex flex-col ${theme.bg} theme-transition overflow-y-auto lg:overflow-hidden relative`}>
       <ThemeMagicOverlay />
 
       {/* Streamers Overlay */}
@@ -274,31 +293,28 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className={`px-3 py-1 rounded-full ${theme.card} backdrop-blur-md flex items-center gap-2 border border-white/20 transition-all`}>
+          <div className={`hidden sm:flex px-3 py-1 rounded-full ${theme.card} backdrop-blur-md items-center gap-2 border border-white/20 transition-all`}>
             {theme.icon}
             <span className={`text-[10px] font-black uppercase tracking-widest ${theme.text}`}>{currentTheme}</span>
           </div>
-          <div className={`text-[10px] font-black uppercase tracking-widest ${theme.text} opacity-60`}>
+          <div className={`text-[10px] font-black uppercase tracking-widest ${theme.text} opacity-60 whitespace-nowrap`}>
              <Info size={12} className="inline mr-1" /> Daily $2 | Weekly $20
           </div>
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 pb-4 flex flex-col md:flex-row gap-4 items-stretch overflow-visible relative z-20">
-        <div className="flex-1 min-h-0 order-2 md:order-1">
-          <UserColumn name="M3" tasks={M3_TASKS} logs={m3Logs} />
-        </div>
-
-        <div className="w-full md:w-[300px] lg:w-[380px] flex flex-col items-center justify-center p-2 gap-4 shrink-0 order-1 md:order-2">
+      <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 pb-12 lg:pb-4 flex flex-col lg:flex-row gap-4 items-stretch overflow-visible relative z-20">
+        {/* Travel Fund - TOP on vertical, CENTER on horizontal */}
+        <div className="w-full lg:w-[300px] xl:w-[380px] flex flex-col items-center justify-center p-2 gap-4 shrink-0 order-1 lg:order-2">
           <div className="w-full bg-slate-900/95 text-white p-6 rounded-[2.5rem] shadow-2xl text-center transform -rotate-1 hover:rotate-0 transition-transform backdrop-blur-xl border border-white/10">
             <div className="text-[10px] font-black uppercase tracking-[0.4em] opacity-50 mb-2 text-lime-400/50">Travel Funds</div>
-            <div className="text-6xl md:text-7xl font-black flex items-center justify-center">
+            <div className="text-6xl lg:text-7xl font-black flex items-center justify-center">
               <span className="text-3xl mr-1 text-lime-400">$</span>
               {totalAmount}
             </div>
           </div>
 
-          <div className="relative w-full aspect-square max-w-[280px] flex items-center justify-center">
+          <div className="relative w-full aspect-square max-w-[240px] lg:max-w-[280px] flex items-center justify-center my-4 lg:my-0">
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-20 flex justify-center">
               {activeCoins.map(id => (
                 <div key={id} className="animate-coin">
@@ -322,7 +338,13 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex-1 min-h-0 order-3 md:order-3">
+        {/* M3 Section - SECOND on vertical, LEFT on horizontal */}
+        <div className="flex-1 min-h-[400px] lg:min-h-0 order-2 lg:order-1">
+          <UserColumn name="M3" tasks={M3_TASKS} logs={m3Logs} />
+        </div>
+
+        {/* Sealphie Section - THIRD on vertical, RIGHT on horizontal */}
+        <div className="flex-1 min-h-[400px] lg:min-h-0 order-3 lg:order-3">
           <UserColumn name="Sealphie" tasks={SEALPHIE_TASKS} logs={sealphieLogs} />
         </div>
       </main>
