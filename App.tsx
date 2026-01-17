@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import { UserType, Contribution } from './types';
 import { User, DollarSign, Info, Plane, Sun, Moon, Cloud, Flower2, Wind, Building2, Coffee, Lamp, Sparkles, Snowflake } from 'lucide-react';
 
@@ -19,6 +19,220 @@ const CELEBRATION_COLORS = ['#f472b6', '#34d399', '#60a5fa', '#fbbf24', '#a78bfa
 
 type TimeTheme = 'morning' | 'afternoon' | 'evening' | 'night' | 'midnight' | 'early';
 
+// Memoized decoration data to keep it stable across the lifetime of the app
+const DECORATION_DATA = {
+  afternoonFlowers: Array.from({ length: 30 }).map((_, i) => ({
+    id: i,
+    top: Math.random() * 100,
+    left: Math.random() * 100,
+    size: 20 + Math.random() * 45,
+    delay: Math.random() * 10,
+    duration: 15 + Math.random() * 15
+  })),
+  eveningDots: Array.from({ length: 35 }).map((_, i) => ({
+    id: i,
+    left: Math.random() * 100 + "%",
+    size: 3 + Math.random() * 5,
+    delay: Math.random() * 15 + "s",
+    duration: 12 + Math.random() * 12 + "s",
+    drift: (Math.random() - 0.5) * 60 + "px"
+  })),
+  nightStars: Array.from({ length: 30 }).map((_, i) => ({
+    id: i,
+    top: Math.random() * 70,
+    left: Math.random() * 100,
+    size: Math.random() * 3,
+    delay: Math.random() * 10
+  })),
+  fairyLights: Array.from({ length: 25 }).map((_, i) => ({
+    id: i,
+    left: (i * 4) + (Math.random() * 2) + "%",
+    top: (Math.random() * 8) + "%",
+    delay: Math.random() * 5,
+    duration: 3 + Math.random() * 3
+  })),
+  midnightSnow: Array.from({ length: 30 }).map((_, i) => ({
+    id: i,
+    left: Math.random() * 100 + "%",
+    size: 20 + Math.random() * 40,
+    delay: Math.random() * 20 + "s",
+    duration: 8 + Math.random() * 12 + "s",
+    opacity: 0.15 + Math.random() * 0.45
+  })),
+};
+
+// Extracted ThemeMagicOverlay to prevent re-renders on piggy click
+const ThemeMagicOverlay = memo(({ currentTheme }: { currentTheme: TimeTheme }) => {
+  if (currentTheme === 'morning') return (
+    <div className="fixed inset-0 pointer-events-none opacity-40">
+      <Cloud className="absolute top-10 left-[10%] text-white/60 animate-drift" size={120} />
+      <Cloud className="absolute top-40 right-[15%] text-white/40 animate-drift" style={{ animationDelay: '-3s' }} size={80} />
+      <div className="absolute bottom-0 w-full h-[30vh] bg-gradient-to-t from-white/20 to-transparent"></div>
+    </div>
+  );
+  if (currentTheme === 'afternoon') return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-70">
+      {DECORATION_DATA.afternoonFlowers.map((flower) => (
+        <div key={flower.id} className="absolute animate-float-flower"
+             style={{
+               top: `${flower.top}%`,
+               left: `${flower.left}%`,
+               animationDelay: `${flower.delay}s`,
+               animationDuration: `${flower.duration}s`
+             }}>
+          <Flower2 className="text-white opacity-60 hover:opacity-100 transition-opacity" size={flower.size} />
+        </div>
+      ))}
+    </div>
+  );
+  if (currentTheme === 'evening') return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 bg-orange-500/5 mix-blend-overlay"></div>
+      {DECORATION_DATA.eveningDots.map((dot) => (
+        <div
+          key={dot.id}
+          className="absolute animate-float-up rounded-full bg-yellow-200/60 shadow-[0_0_8px_rgba(253,224,71,0.5)]"
+          style={{
+            left: dot.left,
+            top: '105%', // Start completely off-screen at bottom
+            width: dot.size + 'px',
+            height: dot.size + 'px',
+            animationDelay: dot.delay,
+            animationDuration: dot.duration,
+            '--drift-x': dot.drift
+          } as React.CSSProperties}
+        />
+      ))}
+    </div>
+  );
+  if (currentTheme === 'night') return (
+    <div className="fixed inset-0 pointer-events-none">
+      <div className="absolute top-[4%] w-full h-[1px] bg-white/5 shadow-sm"></div>
+      {DECORATION_DATA.fairyLights.map((light) => (
+        <div key={light.id} className="absolute" style={{ left: light.left, top: light.top }}>
+          <div className="w-[1px] h-3 bg-white/20 mx-auto"></div>
+          <div className="w-2 h-3 rounded-full bg-amber-400 animate-flicker shadow-[0_0_10px_rgba(251,191,36,0.6)]"
+               style={{ animationDelay: `${light.delay}s`, animationDuration: `${light.duration}s` }}></div>
+        </div>
+      ))}
+      {DECORATION_DATA.nightStars.map((star) => (
+        <div key={star.id} className="absolute bg-white/40 rounded-full animate-twinkle"
+             style={{
+               width: star.size + 'px',
+               height: star.size + 'px',
+               top: star.top + '%',
+               left: star.left + '%',
+               animationDelay: star.delay + 's'
+             }} />
+      ))}
+    </div>
+  );
+  if (currentTheme === 'midnight') return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+      <div className="absolute top-0 left-[-20%] w-[140%] h-[60%] opacity-50 filter blur-[80px]">
+        <div className="absolute top-[10%] left-[10%] w-[80%] h-[40%] bg-emerald-600 rounded-full animate-aurora opacity-90" style={{ animationDelay: '0s' }}></div>
+        <div className="absolute top-[20%] left-[20%] w-[70%] h-[30%] bg-indigo-800 rounded-full animate-aurora opacity-80" style={{ animationDelay: '-5s' }}></div>
+        <div className="absolute top-[15%] left-[40%] w-[60%] h-[35%] bg-teal-500 rounded-full animate-aurora opacity-90" style={{ animationDelay: '-10s' }}></div>
+      </div>
+      {DECORATION_DATA.midnightSnow.map((flake) => (
+        <div
+          key={flake.id}
+          className="absolute animate-snow flex items-center justify-center"
+          style={{
+            left: flake.left,
+            top: '-10%', // Start completely off-screen at top
+            animationDelay: flake.delay,
+            animationDuration: flake.duration,
+            opacity: flake.opacity
+          }}
+        >
+          <Snowflake size={flake.size} className="text-white/80" strokeWidth={1.5} />
+        </div>
+      ))}
+      {DECORATION_DATA.nightStars.map((star) => (
+        <div key={star.id} className="absolute bg-white/20 rounded-full"
+             style={{
+               width: star.size + 'px',
+               height: star.size + 'px',
+               top: star.top + '%',
+               left: star.left + '%',
+             }} />
+      ))}
+      <div className="absolute bottom-0 left-0 w-full h-[20vh] bg-gradient-to-t from-black/40 to-transparent"></div>
+    </div>
+  );
+  if (currentTheme === 'early') return (
+    <div className="fixed inset-0 pointer-events-none bg-gradient-radial from-amber-200/20 to-transparent opacity-60"></div>
+  );
+  return null;
+}, (prev, next) => prev.currentTheme === next.currentTheme);
+
+const UserColumn = ({ name, tasks, logs, theme, triggerCelebration }: {
+  name: string,
+  tasks: typeof M3_TASKS,
+  logs: Contribution[],
+  theme: any,
+  triggerCelebration: () => void
+}) => {
+  const sortedLogs = useMemo(() => [...(logs || [])].reverse(), [logs]);
+  const hasHanamaru = useMemo(() => (logs || []).some(log => log.amount === 0 && tasks.some(t => t.text === log.taskName && t.freq === 'Weekly')), [logs, tasks]);
+
+  return (
+    <div className={`flex flex-col h-full w-full p-4 lg:p-6 ${theme.card} backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-xl transition-all hover:bg-white/5 relative theme-transition mb-4 lg:mb-0`}>
+      <div className="relative flex items-center gap-4 mb-6">
+        <div className="w-12 h-12 lg:w-16 lg:h-16 shrink-0 rounded-full border border-white/10 flex items-center justify-center bg-white/5 shadow-inner">
+           <User size={24} className={`lg:size-7 ${theme.text} opacity-80`} />
+        </div>
+        <h2 className={`text-xl lg:text-3xl font-bold ${theme.text} tracking-tight`}>{name}</h2>
+
+        {hasHanamaru && (
+          <div className="absolute -top-8 -right-6 lg:-right-12 w-20 h-20 lg:w-28 lg:h-28 z-[150] cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
+               onClick={triggerCelebration}>
+            <img
+              src="https://raw.githubusercontent.com/mazui3/TravelFundJar/refs/heads/main/Hanamaru.png"
+              alt="Hanamaru Badge"
+              className="w-full h-full object-contain drop-shadow-2xl"
+            />
+          </div>
+        )}
+      </div>
+
+      <div className="mb-6">
+        <h3 className={`text-[9px] font-black uppercase tracking-widest ${theme.text} mb-3 opacity-50`}>Current Goals</h3>
+        <ul className="space-y-2">
+          {tasks.map(task => (
+            <li key={task.id} className="group flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all">
+              <span className={`text-[8px] bg-white/10 px-2 py-0.5 rounded-full ${theme.text} font-black uppercase whitespace-nowrap shrink-0`}>
+                {task.freq}
+              </span>
+              <div className={`text-sm lg:text-base font-medium ${theme.text} truncate`}>
+                {task.text}
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="flex-1 flex flex-col min-h-0">
+        <h3 className={`text-[9px] font-black uppercase tracking-widest ${theme.text} mb-3 opacity-50`}>Savings History</h3>
+        <div className="flex-1 overflow-y-auto max-h-[400px] lg:max-h-none pr-1 space-y-1.5 scrollbar-hide">
+          {sortedLogs.map(log => (
+            <div key={log.id} className={`p-3 bg-white/5 rounded-xl text-[13px] border border-white/5 flex justify-between items-center animate-in fade-in slide-in-from-top-1 duration-300`}>
+              <div className="min-w-0 flex items-baseline gap-2">
+                <div className={`font-bold ${theme.text} truncate`}>{log.taskName}</div>
+                <div className={`text-[11px] ${theme.text} shrink-0 opacity-50 font-medium`}>{log.date}</div>
+              </div>
+              <div className={`font-bold ml-2 shrink-0 ${log.amount === 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {log.amount === 0 ? '$0' : `+$${log.amount}`}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const App: React.FC = () => {
   const [m3Logs, setM3Logs] = useState<Contribution[]>([]);
   const [sealphieLogs, setSealphieLogs] = useState<Contribution[]>([]);
@@ -27,54 +241,9 @@ const App: React.FC = () => {
   const [streamers, setStreamers] = useState<{ id: number; left: string; color: string; delay: string; duration: string; startRot: string; endRot: string; width: string; height: string }[]>([]);
   const [currentTheme, setCurrentTheme] = useState<TimeTheme>('morning');
 
-  // Pre-calculate random decoration data
-  const afternoonFlowers = useMemo(() => Array.from({ length: 30 }).map((_, i) => ({
-    id: i,
-    top: Math.random() * 100,
-    left: Math.random() * 100,
-    size: 20 + Math.random() * 45,
-    delay: Math.random() * 10,
-    duration: 15 + Math.random() * 15
-  })), []);
-
-  const eveningDots = useMemo(() => Array.from({ length: 35 }).map((_, i) => ({
-    id: i,
-    left: Math.random() * 100 + "%",
-    size: 3 + Math.random() * 5,
-    delay: Math.random() * 15 + "s",
-    duration: 12 + Math.random() * 12 + "s",
-    drift: (Math.random() - 0.5) * 60 + "px"
-  })), []);
-
-  const nightStars = useMemo(() => Array.from({ length: 30 }).map((_, i) => ({
-    id: i,
-    top: Math.random() * 70,
-    left: Math.random() * 100,
-    size: Math.random() * 3,
-    delay: Math.random() * 10
-  })), []);
-
-  const fairyLights = useMemo(() => Array.from({ length: 25 }).map((_, i) => ({
-    id: i,
-    left: (i * 4) + (Math.random() * 2) + "%",
-    top: (Math.random() * 8) + "%",
-    delay: Math.random() * 5,
-    duration: 3 + Math.random() * 3
-  })), []);
-
-  const midnightSnow = useMemo(() => Array.from({ length: 40 }).map((_, i) => ({
-    id: i,
-    left: Math.random() * 100 + "%",
-    size: 20 + Math.random() * 40, // Flower-like sizes
-    delay: Math.random() * 20 + "s",
-    duration: 8 + Math.random() * 12 + "s",
-    opacity: 0.15 + Math.random() * 0.45
-  })), []);
-
   useEffect(() => {
     const updateTheme = () => {
       const hour = new Date().getHours();
-      // Set default for testing or use real-time
       if (hour >= 8 && hour < 12) setCurrentTheme('morning');
       else if (hour >= 12 && hour < 16) setCurrentTheme('afternoon');
       else if (hour >= 16 && hour < 20) setCurrentTheme('evening');
@@ -82,7 +251,6 @@ const App: React.FC = () => {
       else if (hour >= 0 && hour < 4) setCurrentTheme('midnight');
       else setCurrentTheme('early');
     };
-
     updateTheme();
     const interval = setInterval(updateTheme, 60000);
     return () => clearInterval(interval);
@@ -91,24 +259,19 @@ const App: React.FC = () => {
   useEffect(() => {
     const loadHistory = async () => {
       try {
-        // We call our Netlify function twice with different 'file' parameters
         const [m3Res, sealphieRes] = await Promise.all([
           fetch('/.netlify/functions/get-history?file=m3_history.json'),
           fetch('/.netlify/functions/get-history?file=sealphie_history.json')
         ]);
-
         if (!m3Res.ok || !sealphieRes.ok) throw new Error('Failed to fetch history');
-
         const m3Data = await m3Res.json();
         const sealphieData = await sealphieRes.json();
-
         setM3Logs(m3Data);
         setSealphieLogs(sealphieData);
       } catch (err) {
         console.error("Error loading history:", err);
       }
     };
-
     loadHistory();
   }, []);
 
@@ -143,7 +306,7 @@ const App: React.FC = () => {
     }, 8500);
   };
 
-  const getThemeConfig = () => {
+  const themeConfig = useMemo(() => {
     switch (currentTheme) {
       case 'morning':
         return {
@@ -200,186 +363,11 @@ const App: React.FC = () => {
           icon: <Coffee className="text-amber-800" size={20} />
         };
     }
-  };
-
-  const theme = getThemeConfig();
-
-  const ThemeMagicOverlay = () => {
-    if (currentTheme === 'morning') return (
-      <div className="fixed inset-0 pointer-events-none opacity-40">
-        <Cloud className="absolute top-10 left-[10%] text-white/60 animate-drift" size={120} />
-        <Cloud className="absolute top-40 right-[15%] text-white/40 animate-drift" style={{ animationDelay: '-3s' }} size={80} />
-        <div className="absolute bottom-0 w-full h-[30vh] bg-gradient-to-t from-white/20 to-transparent"></div>
-      </div>
-    );
-    if (currentTheme === 'afternoon') return (
-      <div className="fixed inset-0 pointer-events-none overflow-hidden opacity-70">
-        {afternoonFlowers.map((flower) => (
-          <div key={flower.id} className="absolute animate-float-flower"
-               style={{
-                 top: `${flower.top}%`,
-                 left: `${flower.left}%`,
-                 animationDelay: `${flower.delay}s`,
-                 animationDuration: `${flower.duration}s`
-               }}>
-            <Flower2 className="text-white opacity-60 hover:opacity-100 transition-opacity" size={flower.size} />
-          </div>
-        ))}
-      </div>
-    );
-    if (currentTheme === 'evening') return (
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute inset-0 bg-orange-500/5 mix-blend-overlay"></div>
-        {eveningDots.map((dot) => (
-          <div
-            key={dot.id}
-            className="absolute animate-float-up rounded-full bg-yellow-200/60 shadow-[0_0_8px_rgba(253,224,71,0.5)]"
-            style={{
-              left: dot.left,
-              width: dot.size + 'px',
-              height: dot.size + 'px',
-              animationDelay: dot.delay,
-              animationDuration: dot.duration,
-              '--drift-x': dot.drift
-            } as React.CSSProperties}
-          />
-        ))}
-      </div>
-    );
-    if (currentTheme === 'night') return (
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-[4%] w-full h-[1px] bg-white/5 shadow-sm"></div>
-        {fairyLights.map((light) => (
-          <div key={light.id} className="absolute" style={{ left: light.left, top: light.top }}>
-            <div className="w-[1px] h-3 bg-white/20 mx-auto"></div>
-            <div className="w-2 h-3 rounded-full bg-amber-400 animate-flicker shadow-[0_0_10px_rgba(251,191,36,0.6)]"
-                 style={{ animationDelay: `${light.delay}s`, animationDuration: `${light.duration}s` }}></div>
-          </div>
-        ))}
-        {nightStars.map((star) => (
-          <div key={star.id} className="absolute bg-white/40 rounded-full animate-twinkle"
-               style={{
-                 width: star.size + 'px',
-                 height: star.size + 'px',
-                 top: star.top + '%',
-                 left: star.left + '%',
-                 animationDelay: star.delay + 's'
-               }} />
-        ))}
-      </div>
-    );
-    if (currentTheme === 'midnight') return (
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {/* Aurora Borealis Effect */}
-        <div className="absolute top-0 left-[-20%] w-[140%] h-[60%] opacity-50 filter blur-[80px]">
-          <div className="absolute top-[10%] left-[10%] w-[80%] h-[40%] bg-emerald-600 rounded-full animate-aurora opacity-90" style={{ animationDelay: '0s' }}></div>
-          <div className="absolute top-[20%] left-[20%] w-[70%] h-[30%] bg-indigo-800 rounded-full animate-aurora opacity-80" style={{ animationDelay: '-5s' }}></div>
-          <div className="absolute top-[15%] left-[40%] w-[60%] h-[35%] bg-teal-500 rounded-full animate-aurora opacity-90" style={{ animationDelay: '-10s' }}></div>
-        </div>
-
-        {/* Snowy Animation - Now with large Snowflake icons */}
-        {midnightSnow.map((flake) => (
-          <div
-            key={flake.id}
-            className="absolute animate-snow flex items-center justify-center"
-            style={{
-              left: flake.left,
-              animationDelay: flake.delay,
-              animationDuration: flake.duration,
-              opacity: flake.opacity
-            }}
-          >
-            <Snowflake
-              size={flake.size}
-              className="text-white/80"
-              strokeWidth={1.5}
-            />
-          </div>
-        ))}
-
-        {/* Subtle Starry Base */}
-        {nightStars.map((star) => (
-          <div key={star.id} className="absolute bg-white/20 rounded-full"
-               style={{
-                 width: star.size + 'px',
-                 height: star.size + 'px',
-                 top: star.top + '%',
-                 left: star.left + '%',
-               }} />
-        ))}
-
-        <div className="absolute bottom-0 left-0 w-full h-[20vh] bg-gradient-to-t from-black/40 to-transparent"></div>
-      </div>
-    );
-    if (currentTheme === 'early') return (
-      <div className="fixed inset-0 pointer-events-none bg-gradient-radial from-amber-200/20 to-transparent opacity-60"></div>
-    );
-    return null;
-  };
-
-  const UserColumn = ({ name, tasks, logs }: { name: string, tasks: typeof M3_TASKS, logs: Contribution[] }) => {
-    const sortedLogs = [...(logs || [])].reverse();
-    const hasHanamaru = (logs || []).some(log => log.amount === 0 && tasks.some(t => t.text === log.taskName && t.freq === 'Weekly'));
-
-    return (
-      <div className={`flex flex-col h-full w-full p-4 lg:p-6 ${theme.card} backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-xl transition-all hover:bg-white/5 relative theme-transition mb-4 lg:mb-0`}>
-        <div className="relative flex items-center gap-4 mb-6">
-          <div className="w-12 h-12 lg:w-16 lg:h-16 shrink-0 rounded-full border border-white/10 flex items-center justify-center bg-white/5 shadow-inner">
-             <User size={24} className={`lg:size-7 ${theme.text} opacity-80`} />
-          </div>
-          <h2 className={`text-xl lg:text-3xl font-bold ${theme.text} tracking-tight`}>{name}</h2>
-
-          {hasHanamaru && (
-            <div className="absolute -top-8 -right-6 lg:-right-12 w-20 h-20 lg:w-28 lg:h-28 z-[150] cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
-                 onClick={triggerCelebration}>
-              <img
-                src="https://raw.githubusercontent.com/mazui3/TravelFundJar/refs/heads/main/Hanamaru.png"
-                alt="Hanamaru Badge"
-                className="w-full h-full object-contain drop-shadow-2xl"
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="mb-6">
-          <h3 className={`text-[9px] font-black uppercase tracking-widest ${theme.text} mb-3 opacity-50`}>Current Goals</h3>
-          <ul className="space-y-2">
-            {tasks.map(task => (
-              <li key={task.id} className="group flex items-center gap-3 p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all">
-                <span className={`text-[8px] bg-white/10 px-2 py-0.5 rounded-full ${theme.text} font-black uppercase whitespace-nowrap shrink-0`}>
-                  {task.freq}
-                </span>
-                <div className={`text-sm lg:text-base font-medium ${theme.text} truncate`}>
-                  {task.text}
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
-
-        <div className="flex-1 flex flex-col min-h-0">
-          <h3 className={`text-[9px] font-black uppercase tracking-widest ${theme.text} mb-3 opacity-50`}>Savings History</h3>
-          <div className="flex-1 overflow-y-auto max-h-[400px] lg:max-h-none pr-1 space-y-1.5 scrollbar-hide">
-            {sortedLogs.map(log => (
-              <div key={log.id} className={`p-3 bg-white/5 rounded-xl text-[13px] border border-white/5 flex justify-between items-center animate-in fade-in slide-in-from-top-1 duration-300`}>
-                <div className="min-w-0 flex items-baseline gap-2">
-                  <div className={`font-bold ${theme.text} truncate`}>{log.taskName}</div>
-                  <div className={`text-[11px] ${theme.text} shrink-0 opacity-50 font-medium`}>{log.date}</div>
-                </div>
-                <div className={`font-bold ml-2 shrink-0 ${log.amount === 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {log.amount === 0 ? '$0' : `+$${log.amount}`}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  }, [currentTheme]);
 
   return (
-    <div className={`min-h-screen lg:h-screen w-full flex flex-col ${theme.bg} theme-transition overflow-y-auto lg:overflow-hidden relative`}>
-      <ThemeMagicOverlay />
+    <div className={`min-h-screen lg:h-screen w-full flex flex-col ${themeConfig.bg} theme-transition overflow-y-auto lg:overflow-hidden relative`}>
+      <ThemeMagicOverlay currentTheme={currentTheme} />
 
       {/* Streamers Overlay */}
       {streamers.map(s => (
@@ -397,15 +385,15 @@ const App: React.FC = () => {
           <div className="p-1.5 bg-slate-900 rounded-lg shadow-lg">
             <Plane className="text-lime-400" size={16} />
           </div>
-          <h1 className={`text-sm font-black uppercase tracking-[0.2em] ${theme.header} transition-colors`}>Travel Fund Jar</h1>
+          <h1 className={`text-sm font-black uppercase tracking-[0.2em] ${themeConfig.header} transition-colors`}>Travel Fund Jar</h1>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className={`hidden sm:flex px-3 py-1 rounded-full ${theme.card} backdrop-blur-md items-center gap-2 border border-white/10 transition-all`}>
-            {theme.icon}
-            <span className={`text-[10px] font-black uppercase tracking-widest ${theme.text}`}>{currentTheme}</span>
+          <div className={`hidden sm:flex px-3 py-1 rounded-full ${themeConfig.card} backdrop-blur-md items-center gap-2 border border-white/10 transition-all`}>
+            {themeConfig.icon}
+            <span className={`text-[10px] font-black uppercase tracking-widest ${themeConfig.text}`}>{currentTheme}</span>
           </div>
-          <div className={`text-[10px] font-black uppercase tracking-widest ${theme.text} opacity-60 whitespace-nowrap`}>
+          <div className={`text-[10px] font-black uppercase tracking-widest ${themeConfig.text} opacity-60 whitespace-nowrap`}>
              <Info size={12} className="inline mr-1" /> Daily $2 | Weekly $20
           </div>
         </div>
@@ -446,15 +434,15 @@ const App: React.FC = () => {
         </div>
 
         <div className="flex-1 min-h-[400px] lg:min-h-0 order-2 lg:order-1">
-          <UserColumn name="M3" tasks={M3_TASKS} logs={m3Logs} />
+          <UserColumn name="M3" tasks={M3_TASKS} logs={m3Logs} theme={themeConfig} triggerCelebration={triggerCelebration} />
         </div>
 
         <div className="flex-1 min-h-[400px] lg:min-h-0 order-3 lg:order-3">
-          <UserColumn name="Sealphie" tasks={SEALPHIE_TASKS} logs={sealphieLogs} />
+          <UserColumn name="Sealphie" tasks={SEALPHIE_TASKS} logs={sealphieLogs} theme={themeConfig} triggerCelebration={triggerCelebration} />
         </div>
       </main>
 
-      <footer className={`flex-none py-3 text-center ${theme.text} text-[9px] font-black uppercase tracking-[0.5em] opacity-30 relative z-10`}>
+      <footer className={`flex-none py-3 text-center ${themeConfig.text} text-[9px] font-black uppercase tracking-[0.5em] opacity-30 relative z-10`}>
         Saving money or getting things done, win win &middot; 2026
       </footer>
     </div>
