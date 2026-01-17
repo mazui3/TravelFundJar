@@ -92,8 +92,8 @@ const App: React.FC = () => {
     const loadHistory = async () => {
       try {
         const [m3Res, sealphieRes] = await Promise.all([
-          fetch('https://raw.githubusercontent.com/mazui3/TravelFundJarData/refs/heads/main/m3_history.json'),
-          fetch('https://raw.githubusercontent.com/mazui3/TravelFundJarData/refs/heads/main/sealphie_history.json')
+          fetch(M3DataLink),
+          fetch(SealphieDataLink)
         ]);
         if (!m3Res.ok || !sealphieRes.ok) throw new Error('Failed to fetch history');
         setM3Logs(await m3Res.json());
@@ -326,7 +326,7 @@ const App: React.FC = () => {
             <div className="absolute -top-8 -right-6 lg:-right-12 w-20 h-20 lg:w-28 lg:h-28 z-[150] cursor-pointer transition-all duration-300 hover:scale-110 active:scale-95"
                  onClick={triggerCelebration}>
               <img
-                src="https://raw.githubusercontent.com/mazui3/Travel-Fund-Jar/refs/heads/main/Hanamaru.png"
+                src=var(HanamaruImageLink)
                 alt="Hanamaru Badge"
                 className="w-full h-full object-contain drop-shadow-2xl"
               />
@@ -430,7 +430,7 @@ const App: React.FC = () => {
               onClick={playJarAnimation}
             >
               <img
-                src="https://raw.githubusercontent.com/mazui3/Travel-Fund-Jar/refs/heads/main/Piggy.png"
+                src=var(PiggyImageLink)
                 alt="Piggy Bank"
                 className="w-full h-full object-contain drop-shadow-[0_20px_40px_rgba(0,0,0,0.3)]"
               />
