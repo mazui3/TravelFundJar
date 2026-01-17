@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { UserType, Contribution } from './types';
-import { User, DollarSign, Info, Plane, Sun, Moon, Cloud, Flower2, Wind, Building2, Coffee, Lamp } from 'lucide-react';
+import { User, DollarSign, Info, Plane, Sun, Moon, Cloud, Flower2, Wind, Building2, Coffee, Lamp, Sparkles, Snowflake } from 'lucide-react';
 
 const M3_TASKS = [
   { id: 'm1', text: 'Eating veggies', freq: 'Daily' },
@@ -37,6 +37,15 @@ const App: React.FC = () => {
     duration: 15 + Math.random() * 15
   })), []);
 
+  const eveningDots = useMemo(() => Array.from({ length: 35 }).map((_, i) => ({
+    id: i,
+    left: Math.random() * 100 + "%",
+    size: 3 + Math.random() * 5,
+    delay: Math.random() * 15 + "s",
+    duration: 12 + Math.random() * 12 + "s",
+    drift: (Math.random() - 0.5) * 60 + "px"
+  })), []);
+
   const nightStars = useMemo(() => Array.from({ length: 30 }).map((_, i) => ({
     id: i,
     top: Math.random() * 70,
@@ -53,15 +62,25 @@ const App: React.FC = () => {
     duration: 3 + Math.random() * 3
   })), []);
 
+  const midnightSnow = useMemo(() => Array.from({ length: 40 }).map((_, i) => ({
+    id: i,
+    left: Math.random() * 100 + "%",
+    size: 20 + Math.random() * 40, // Flower-like sizes
+    delay: Math.random() * 20 + "s",
+    duration: 8 + Math.random() * 12 + "s",
+    opacity: 0.15 + Math.random() * 0.45
+  })), []);
+
   useEffect(() => {
     const updateTheme = () => {
       const hour = new Date().getHours();
+      // Set default for testing or use real-time
       if (hour >= 8 && hour < 12) setCurrentTheme('morning');
       else if (hour >= 12 && hour < 16) setCurrentTheme('afternoon');
       else if (hour >= 16 && hour < 20) setCurrentTheme('evening');
-      else if (hour >= 20 && hour < 24) setCurrentTheme('night'); // 8pm - 12am
-      else if (hour >= 0 && hour < 4) setCurrentTheme('midnight'); // 12am - 4am
-      else setCurrentTheme('early'); // 4am - 8am
+      else if (hour >= 20 && hour < 24) setCurrentTheme('night');
+      else if (hour >= 0 && hour < 4) setCurrentTheme('midnight');
+      else setCurrentTheme('early');
     };
 
     updateTheme();
@@ -87,8 +106,8 @@ const App: React.FC = () => {
   }, []);
 
   const totalAmount = useMemo(() => {
-    return m3Logs.reduce((sum, l) => sum + l.amount, 0) +
-           sealphieLogs.reduce((sum, l) => sum + l.amount, 0);
+    return (m3Logs?.reduce((sum, l) => sum + (l.amount || 0), 0) || 0) +
+           (sealphieLogs?.reduce((sum, l) => sum + (l.amount || 0), 0) || 0);
   }, [m3Logs, sealphieLogs]);
 
   const playJarAnimation = () => {
@@ -139,7 +158,7 @@ const App: React.FC = () => {
         };
       case 'evening':
         return {
-          bg: 'bg-gradient-to-t from-orange-200 via-rose-300 to-indigo-800',
+          bg: 'bg-gradient-to-t from-orange-200 via-rose-300 to-blue-700',
           card: 'bg-white/30',
           text: 'text-slate-900',
           accent: 'text-orange-800',
@@ -157,12 +176,12 @@ const App: React.FC = () => {
         };
       case 'midnight':
         return {
-          bg: 'bg-gradient-to-br from-[#a36f5d] via-[#1a237e] to-[#010409]',
-          card: 'bg-blue-950/20 border-blue-500/20 shadow-[0_0_40px_rgba(59,130,246,0.08)]',
-          text: 'text-blue-50',
-          accent: 'text-amber-400',
-          header: 'text-amber-200',
-          icon: <Lamp className="text-amber-300" size={20} />
+          bg: 'bg-gradient-to-br from-slate-950 via-indigo-950 to-black',
+          card: 'bg-white/5 border-white/5 shadow-[0_0_50px_rgba(59,130,246,0.1)]',
+          text: 'text-blue-100',
+          accent: 'text-emerald-400',
+          header: 'text-emerald-300',
+          icon: <Sparkles className="text-emerald-300" size={20} />
         };
       case 'early':
         return {
@@ -196,16 +215,40 @@ const App: React.FC = () => {
                  animationDelay: `${flower.delay}s`,
                  animationDuration: `${flower.duration}s`
                }}>
-            <Flower2 className="text-white opacity-40 hover:opacity-100 transition-opacity" size={flower.size} />
+            <Flower2 className="text-white opacity-60 hover:opacity-100 transition-opacity" size={flower.size} />
           </div>
         ))}
       </div>
     );
     if (currentTheme === 'evening') return (
-      <div className="fixed inset-0 pointer-events-none bg-orange-500/5 mix-blend-overlay"></div>
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-orange-500/5 mix-blend-overlay"></div>
+        {eveningDots.map((dot) => (
+          <div
+            key={dot.id}
+            className="absolute animate-float-up rounded-full bg-yellow-200/60 shadow-[0_0_8px_rgba(253,224,71,0.5)]"
+            style={{
+              left: dot.left,
+              width: dot.size + 'px',
+              height: dot.size + 'px',
+              animationDelay: dot.delay,
+              animationDuration: dot.duration,
+              '--drift-x': dot.drift
+            } as React.CSSProperties}
+          />
+        ))}
+      </div>
     );
     if (currentTheme === 'night') return (
       <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-[4%] w-full h-[1px] bg-white/5 shadow-sm"></div>
+        {fairyLights.map((light) => (
+          <div key={light.id} className="absolute" style={{ left: light.left, top: light.top }}>
+            <div className="w-[1px] h-3 bg-white/20 mx-auto"></div>
+            <div className="w-2 h-3 rounded-full bg-amber-400 animate-flicker shadow-[0_0_10px_rgba(251,191,36,0.6)]"
+                 style={{ animationDelay: `${light.delay}s`, animationDuration: `${light.duration}s` }}></div>
+          </div>
+        ))}
         {nightStars.map((star) => (
           <div key={star.id} className="absolute bg-white/40 rounded-full animate-twinkle"
                style={{
@@ -220,18 +263,45 @@ const App: React.FC = () => {
     );
     if (currentTheme === 'midnight') return (
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        {/* String wire */}
-        <div className="absolute top-[4%] w-full h-[1px] bg-white/5 shadow-sm"></div>
-        {/* Fairy Lights */}
-        {fairyLights.map((light) => (
-          <div key={light.id} className="absolute" style={{ left: light.left, top: light.top }}>
-            <div className="w-[1px] h-3 bg-white/20 mx-auto"></div>
-            <div className="w-2 h-3 rounded-full bg-amber-400 animate-flicker shadow-[0_0_10px_rgba(251,191,36,0.6)]"
-                 style={{ animationDelay: `${light.delay}s`, animationDuration: `${light.duration}s` }}></div>
+        {/* Aurora Borealis Effect */}
+        <div className="absolute top-0 left-[-20%] w-[140%] h-[60%] opacity-50 filter blur-[80px]">
+          <div className="absolute top-[10%] left-[10%] w-[80%] h-[40%] bg-emerald-600 rounded-full animate-aurora opacity-90" style={{ animationDelay: '0s' }}></div>
+          <div className="absolute top-[20%] left-[20%] w-[70%] h-[30%] bg-indigo-800 rounded-full animate-aurora opacity-80" style={{ animationDelay: '-5s' }}></div>
+          <div className="absolute top-[15%] left-[40%] w-[60%] h-[35%] bg-teal-500 rounded-full animate-aurora opacity-90" style={{ animationDelay: '-10s' }}></div>
+        </div>
+
+        {/* Snowy Animation - Now with large Snowflake icons */}
+        {midnightSnow.map((flake) => (
+          <div
+            key={flake.id}
+            className="absolute animate-snow flex items-center justify-center"
+            style={{
+              left: flake.left,
+              animationDelay: flake.delay,
+              animationDuration: flake.duration,
+              opacity: flake.opacity
+            }}
+          >
+            <Snowflake
+              size={flake.size}
+              className="text-white/80"
+              strokeWidth={1.5}
+            />
           </div>
         ))}
-        {/* Subtle warm vignettes */}
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_120%,rgba(59,130,246,0.1),transparent_70%)]"></div>
+
+        {/* Subtle Starry Base */}
+        {nightStars.map((star) => (
+          <div key={star.id} className="absolute bg-white/20 rounded-full"
+               style={{
+                 width: star.size + 'px',
+                 height: star.size + 'px',
+                 top: star.top + '%',
+                 left: star.left + '%',
+               }} />
+        ))}
+
+        <div className="absolute bottom-0 left-0 w-full h-[20vh] bg-gradient-to-t from-black/40 to-transparent"></div>
       </div>
     );
     if (currentTheme === 'early') return (
@@ -241,8 +311,8 @@ const App: React.FC = () => {
   };
 
   const UserColumn = ({ name, tasks, logs }: { name: string, tasks: typeof M3_TASKS, logs: Contribution[] }) => {
-    const sortedLogs = logs.slice().reverse();
-    const hasHanamaru = logs.some(log => log.amount === 0 && tasks.some(t => t.text === log.taskName && t.freq === 'Weekly'));
+    const sortedLogs = [...(logs || [])].reverse();
+    const hasHanamaru = (logs || []).some(log => log.amount === 0 && tasks.some(t => t.text === log.taskName && t.freq === 'Weekly'));
 
     return (
       <div className={`flex flex-col h-full w-full p-4 lg:p-6 ${theme.card} backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-xl transition-all hover:bg-white/5 relative theme-transition mb-4 lg:mb-0`}>
@@ -335,7 +405,7 @@ const App: React.FC = () => {
       </header>
 
       <main className="flex-1 w-full max-w-[1440px] mx-auto px-4 pb-12 lg:pb-4 flex flex-col lg:flex-row gap-4 items-stretch overflow-visible relative z-20">
-        <div className="w-full lg:w-[300px] xl:w-[380px] flex flex-col items-center justify-center p-2 gap-4 shrink-0 order-1 lg:order-2">
+        <div className="w-full lg:w-[360px] xl:w-[456px] flex flex-col items-center justify-center p-2 gap-4 shrink-0 order-1 lg:order-2">
           <div className="w-full bg-slate-900/95 text-white p-6 rounded-[2.5rem] shadow-2xl text-center transform -rotate-1 hover:rotate-0 transition-transform backdrop-blur-xl border border-white/10">
             <div className="text-[10px] font-black uppercase tracking-[0.4em] opacity-50 mb-2 text-lime-400/50">Travel Funds</div>
             <div className="text-6xl lg:text-7xl font-black flex items-center justify-center">
@@ -344,7 +414,7 @@ const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="relative w-full aspect-square max-w-[240px] lg:max-w-[280px] flex items-center justify-center my-4 lg:my-0">
+          <div className="relative w-full aspect-square max-w-[240px] lg:max-w-[320px] flex items-center justify-center my-4 lg:my-0">
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-20 flex justify-center">
               {activeCoins.map(id => (
                 <div key={id} className="animate-coin">
