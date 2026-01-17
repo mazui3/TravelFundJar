@@ -91,17 +91,24 @@ const App: React.FC = () => {
   useEffect(() => {
     const loadHistory = async () => {
       try {
+        // We call our Netlify function twice with different 'file' parameters
         const [m3Res, sealphieRes] = await Promise.all([
-          fetch('https://' + GITHUB_TOKEN + '@raw.githubusercontent.com/mazui3/TravelFundJarData/main/m3_history.json'),
-          fetch('https://' + GITHUB_TOKEN + '@raw.githubusercontent.com/mazui3/TravelFundJarData/main/sealphie_history.json')
+          fetch('/.netlify/functions/get-history?file=m3_history.json'),
+          fetch('/.netlify/functions/get-history?file=sealphie_history.json')
         ]);
+
         if (!m3Res.ok || !sealphieRes.ok) throw new Error('Failed to fetch history');
-        setM3Logs(await m3Res.json());
-        setSealphieLogs(await sealphieRes.json());
+
+        const m3Data = await m3Res.json();
+        const sealphieData = await sealphieRes.json();
+
+        setM3Logs(m3Data);
+        setSealphieLogs(sealphieData);
       } catch (err) {
         console.error("Error loading history:", err);
       }
     };
+
     loadHistory();
   }, []);
 
