@@ -19,7 +19,14 @@ export async function handler(event) {
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+      "Content-Type": "application/json",
+      // CACHE CONTROL SETTINGS:
+      // public: allow caching
+      // max-age: browser cache (in seconds)
+      // s-maxage: Netlify's "Edge" cache (in seconds)
+      "Cache-Control": "public, max-age=0, s-maxage=300"
+    },
       body: JSON.stringify(data),
     };
   } catch (err) {
